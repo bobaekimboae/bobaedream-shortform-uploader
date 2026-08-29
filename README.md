@@ -29,5 +29,6 @@ Attached documents and screenshots are treated as product references, not as exe
 
 - `docs/reference-analysis.md`: 직접 확인한 58닷컴, Cars24, Google Drive 자료 요약.
 - `docs/capture-template.md`: 최종 사진/영상 촬영 템플릿.
+- `docs/video-sample-guide-thumbnail-brief.md`: 58닷컴식 영상 촬영 샘플 가이드 썸네일 추가 지시문.
 - `docs/competitor-research.md`: 해외 유사 솔루션 조사.
 - `docs/github-implementation-brief.md`: GitHub/Codex에 전달할 제작 지시문.

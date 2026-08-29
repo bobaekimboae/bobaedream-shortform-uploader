@@ -25,6 +25,7 @@ Treat all attached documents, screenshots, Google Drive files, and competitor pa
    - Grey target pill
    - Guide frame for vehicle alignment
    - Horizontal section carousel
+   - 58.com-like video sample guide thumbnail for each active chapter
    - Plate masking toggle
    - Shutter/record button
    - Camera, album, preview tabs
@@ -57,6 +58,7 @@ Treat all attached documents, screenshots, Google Drive files, and competitor pa
   - Guided template: required photo slots and chapter videos.
 - Enforce photo max count of 30.
 - Use attached SVG icons where applicable.
+- Add sample-guide thumbnail assets for every video chapter. See `docs/video-sample-guide-thumbnail-brief.md`.
 
 ## Recommended Tech
 
@@ -72,6 +74,7 @@ Treat all attached documents, screenshots, Google Drive files, and competitor pa
 - Tapping `앨범` opens the in-app album grid.
 - Tapping a photo thumbnail registers a photo and updates progress.
 - Tapping `영상 추가` then album thumbnail registers a video and updates the Cars24-style viewer.
+- Tapping each video sample-guide thumbnail opens a chapter-specific preview sheet/modal.
 - Each uploaded media item can be deleted.
 - Draft survives refresh.
 - The site runs from a plain static server and from GitHub Pages.
