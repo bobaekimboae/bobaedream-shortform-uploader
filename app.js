@@ -113,6 +113,7 @@ function bindElements() {
     "photoManagement",
     "requiredPhotoCounter",
     "videoChapterCounter",
+    "videoManagement",
     "photoSlots",
     "videoChapters",
     "viewerTabs",
@@ -246,24 +247,29 @@ function renderPhotoSlots() {
 }
 
 function renderVideoChapters() {
-  els.videoChapters.innerHTML = videoChapters
+  if (els.videoManagement) els.videoManagement.hidden = state.videos.length === 0;
+  const registeredVideos = videoChapters
     .map((chapter) => {
       const media = state.videos.find((item) => item.chapterKey === chapter.key);
-      const thumb = media
-        ? `<video src="${media.previewUrl}" muted playsinline></video>`
-        : `<span class="sample-label">예시</span><img src="./assets/${chapter.icon}" alt="" />`;
+      return media ? { chapter, media } : null;
+    })
+    .filter(Boolean);
+
+  els.videoChapters.innerHTML = registeredVideos
+    .map(({ chapter, media }) => {
+      const thumb = `<video src="${media.previewUrl}" muted playsinline></video>`;
       return `
-        <article class="chapter-card ${media ? "is-complete" : ""}" data-chapter="${chapter.key}">
+        <article class="chapter-card is-complete" data-chapter="${chapter.key}">
           <span class="status-dot" aria-hidden="true"></span>
           <div class="chapter-thumb">${thumb}</div>
           <div class="chapter-copy">
             <strong>${chapter.label} · ${chapter.cars24}</strong>
             <p>58닷컴 대응: ${chapter.group58}. 권장 길이 ${chapter.seconds}.</p>
-            <small>${media ? media.name : "미등록"} ${media?.durationSec ? `· ${media.durationSec}초` : ""}</small>
+            <small>${media.name} ${media.durationSec ? `· ${media.durationSec}초` : ""}</small>
             <div class="chapter-actions">
-              <button class="mini-button" type="button" data-retake-video="${chapter.key}">${media ? "교체" : "촬영"}</button>
-              ${media ? `<button class="mini-button" type="button" data-view-video="${chapter.key}">보기</button>` : ""}
-              ${media ? `<button class="delete-button" type="button" data-delete="${media.id}">삭제</button>` : ""}
+              <button class="mini-button" type="button" data-retake-video="${chapter.key}">교체</button>
+              <button class="mini-button" type="button" data-view-video="${chapter.key}">보기</button>
+              <button class="delete-button" type="button" data-delete="${media.id}">삭제</button>
             </div>
           </div>
         </article>`;
@@ -344,7 +350,7 @@ function renderProgress() {
   els.photoCount.textContent = String(state.photos.length);
   els.videoCount.textContent = String(state.videos.length);
   els.requiredPhotoCounter.textContent = `${state.photos.length}/30`;
-  els.videoChapterCounter.textContent = `${doneVideos.length}/${videoChapters.length} 완료`;
+  els.videoChapterCounter.textContent = `${state.videos.length}개`;
   const missingPhotos = requiredPhotos.length - doneRequiredPhotos.length;
   const missingVideos = videoChapters.length - doneVideos.length;
   els.missingSummary.textContent = `필수 사진 ${missingPhotos}개와 영상 챕터 ${missingVideos}개가 남았습니다.`;
@@ -699,13 +705,13 @@ async function deleteMedia(id) {
   const label = item.type === "photo" ? "사진" : "영상";
   const ok = window.confirm(`${label}을 삭제할까요? 필수 항목이면 미완료 상태로 돌아갑니다.`);
   if (!ok) return;
-  URL.revokeObjectURL(item.previewUrl);
   await deleteBlob(item.blobKey);
   state.photos = state.photos.filter((media) => media.id !== id);
   state.videos = state.videos.filter((media) => media.id !== id);
   if (state.coverMediaId === id) state.coverMediaId = state.photos[0]?.id || "";
   saveDraft();
   renderAll();
+  setTimeout(() => URL.revokeObjectURL(item.previewUrl), 800);
   showToast(`${label}을 삭제했습니다.`);
 }
 
