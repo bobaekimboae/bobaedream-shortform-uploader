@@ -116,6 +116,7 @@ function bindElements() {
     "videoManagement",
     "photoSlots",
     "videoChapters",
+    "viewerSection",
     "viewerTabs",
     "viewerVideo",
     "viewerStage",
@@ -163,21 +164,25 @@ function bindEvents() {
 
   document.getElementById("closeCapture").addEventListener("click", closeCapture);
   document.getElementById("doneCapture").addEventListener("click", closeCapture);
-  document.getElementById("openRules").addEventListener("click", () => els.rulesDialog.showModal());
-  document.getElementById("closeRules").addEventListener("click", () => els.rulesDialog.close());
-  document.getElementById("saveDraft").addEventListener("click", () => {
+  document.getElementById("openRules")?.addEventListener("click", () => els.rulesDialog.showModal());
+  document.getElementById("closeRules")?.addEventListener("click", () => els.rulesDialog.close());
+  document.getElementById("draftShortcut")?.addEventListener("click", () => {
     saveDraft();
     showToast("임시저장했습니다. 새로고침 후에도 상태가 복원됩니다.");
+  });
+  document.getElementById("saveDraft")?.addEventListener("click", () => {
+    saveDraft();
+    showToast("차종 선택 단계입니다. 현재 데모 차량 정보로 저장했습니다.");
   });
   document.getElementById("submitDemo").addEventListener("click", () => {
     saveDraft();
     showToast("데모 등록 완료 상태입니다. 실제 서버 전송은 제외되어 있습니다.");
   });
-  document.getElementById("resetDemo").addEventListener("click", resetDemo);
-  document.getElementById("draftDelete").addEventListener("click", () => {
+  document.getElementById("resetDemo")?.addEventListener("click", resetDemo);
+  document.getElementById("draftDelete")?.addEventListener("click", () => {
     showToast("58닷컴 임시 저장함처럼 초안 삭제 확인 후 초기화할 수 있습니다.");
   });
-  document.getElementById("toggleMute").addEventListener("click", () => {
+  document.getElementById("toggleMute")?.addEventListener("click", () => {
     els.viewerVideo.muted = !els.viewerVideo.muted;
     document.getElementById("toggleMute").textContent = els.viewerVideo.muted ? "음소거" : "소리 켬";
   });
@@ -185,7 +190,7 @@ function bindEvents() {
   els.captureButton.addEventListener("click", handleCapturePress);
   els.cameraTab.addEventListener("click", () => setCaptureTab("camera"));
   els.albumTab.addEventListener("click", () => setCaptureTab("album"));
-  els.liveCamera.addEventListener("click", startLiveCamera);
+  els.liveCamera?.addEventListener("click", startLiveCamera);
   els.plateMask.addEventListener("click", () => {
     state.plateMasked = !state.plateMasked;
     els.plateMask.classList.toggle("is-active", state.plateMasked);
@@ -303,6 +308,7 @@ function bindMediaButtons(root) {
 }
 
 function renderViewerTabs() {
+  if (els.viewerSection) els.viewerSection.hidden = state.videos.length === 0;
   els.viewerTabs.innerHTML = videoChapters
     .map(
       (chapter) => `
@@ -330,6 +336,7 @@ function setViewerChapter(key) {
 }
 
 function updateViewerVideo() {
+  if (els.viewerSection) els.viewerSection.hidden = state.videos.length === 0;
   const media = state.videos.find((item) => item.chapterKey === state.activeViewerChapter);
   if (!media) {
     els.viewerVideo.removeAttribute("src");
@@ -345,17 +352,17 @@ function renderProgress() {
   const doneRequiredPhotos = requiredPhotos.filter((slot) => state.photos.some((item) => item.slotKey === slot.key));
   const doneVideos = videoChapters.filter((chapter) => state.videos.some((item) => item.chapterKey === chapter.key));
   const rate = Math.min(100, Math.round(24 + (doneRequiredPhotos.length / requiredPhotos.length) * 40 + (doneVideos.length / videoChapters.length) * 36));
-  els.completionRate.textContent = String(rate);
-  els.progressFill.style.width = `${rate}%`;
-  els.photoCount.textContent = String(state.photos.length);
-  els.videoCount.textContent = String(state.videos.length);
-  els.requiredPhotoCounter.textContent = `${state.photos.length}/30`;
-  els.videoChapterCounter.textContent = `${state.videos.length}개`;
+  if (els.completionRate) els.completionRate.textContent = String(rate);
+  if (els.progressFill) els.progressFill.style.width = `${rate}%`;
+  if (els.photoCount) els.photoCount.textContent = String(state.photos.length);
+  if (els.videoCount) els.videoCount.textContent = String(state.videos.length);
+  if (els.requiredPhotoCounter) els.requiredPhotoCounter.textContent = `${state.photos.length}/30`;
+  if (els.videoChapterCounter) els.videoChapterCounter.textContent = `${state.videos.length}개`;
   const missingPhotos = requiredPhotos.length - doneRequiredPhotos.length;
   const missingVideos = videoChapters.length - doneVideos.length;
-  els.missingSummary.textContent = `필수 사진 ${missingPhotos}개와 영상 챕터 ${missingVideos}개가 남았습니다.`;
+  if (els.missingSummary) els.missingSummary.textContent = `필수 사진 ${missingPhotos}개와 영상 챕터 ${missingVideos}개가 남았습니다.`;
   const cover = state.photos.find((item) => item.id === state.coverMediaId);
-  els.coverLabel.textContent = cover ? photoSlots.find((slot) => slot.key === cover.slotKey)?.name || "지정됨" : "미지정";
+  if (els.coverLabel) els.coverLabel.textContent = cover ? photoSlots.find((slot) => slot.key === cover.slotKey)?.name || "지정됨" : "미지정";
 }
 
 function captureGroupForChapter(chapterKey) {
@@ -398,7 +405,8 @@ function updateCaptureUi() {
 
   document.querySelector(".capture-screen")?.classList.toggle("video-mode", isVideo);
   document.querySelector(".capture-screen")?.classList.toggle("album-mode", state.captureTab === "album");
-  els.captureTitle.textContent = isVideo ? "차량 영상" : "사진 촬영";
+  els.captureTitle.textContent = state.captureTab === "album" ? "내 앨범" : isVideo ? "차량 영상" : "사진 촬영";
+  els.targetPill.hidden = state.captureTab === "album";
   els.targetPill.textContent = isVideo ? `촬영 ${active?.label}` : `촬영 ${active?.name}`;
   els.cameraInstruction.textContent = isVideo
     ? active?.instruction || "촬영 옵션이 맞는지 확인하세요."
@@ -407,6 +415,7 @@ function updateCaptureUi() {
   els.captureButton.setAttribute("aria-label", isVideo ? "영상 촬영 또는 선택" : "사진 촬영 또는 선택");
   els.cameraTab.classList.toggle("is-active", state.captureTab === "camera");
   els.albumTab.classList.toggle("is-active", state.captureTab === "album");
+  els.liveCamera?.classList.toggle("is-active", false);
   renderCaptureCarousel();
   renderAlbumPanel();
 }
