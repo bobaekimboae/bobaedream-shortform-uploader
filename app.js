@@ -32,6 +32,37 @@ const videoChapters = [
   { key: "engine", label: "엔진룸", cars24: "Engine", group58: "엔진룸", seconds: "8~12초", icon: "svgexport-60.svg" },
 ];
 
+const videoCaptureGroups = [
+  {
+    key: "exterior",
+    label: "차량 외관",
+    chapterKey: "walkaround",
+    thumb: "./assets/sample-guides/walkaround-thumb.jpg",
+    instruction: "차량 전체가 가이드 프레임 안에 들어오게 천천히 한 바퀴 촬영하세요.",
+  },
+  {
+    key: "interior",
+    label: "차 내장",
+    chapterKey: "dashboard",
+    thumb: "./assets/sample-guides/interior-thumb.jpg",
+    instruction: "운전석에서 대시보드, 센터페시아, 시트 상태가 이어지게 촬영하세요.",
+  },
+  {
+    key: "engine",
+    label: "엔진룸",
+    chapterKey: "engine",
+    thumb: "./assets/sample-guides/engine-thumb.jpg",
+    instruction: "후드를 열고 엔진룸 전체를 먼저 잡은 뒤 누유와 오염 부위를 가까이 보여주세요.",
+  },
+  {
+    key: "boot",
+    label: "트렁크",
+    chapterKey: "boot",
+    thumb: "./assets/sample-guides/boot-thumb.jpg",
+    instruction: "트렁크를 연 상태에서 적재 공간과 바닥 상태가 보이게 촬영하세요.",
+  },
+];
+
 const state = {
   mode: "template",
   photos: [],
@@ -40,6 +71,7 @@ const state = {
   activeCaptureType: "photo",
   activeSlotKey: "left_front_45",
   activeChapterKey: "walkaround",
+  activeVideoGroupKey: "exterior",
   activeViewerChapter: "walkaround",
   plateMasked: false,
   stream: null,
@@ -48,6 +80,7 @@ const state = {
   recordingStartedAt: 0,
   recordingTimer: null,
   captureTab: "camera",
+  pendingAlbumIndexes: [],
 };
 
 const els = {};
@@ -319,11 +352,23 @@ function renderProgress() {
   els.coverLabel.textContent = cover ? photoSlots.find((slot) => slot.key === cover.slotKey)?.name || "지정됨" : "미지정";
 }
 
+function captureGroupForChapter(chapterKey) {
+  if (chapterKey === "engine") return videoCaptureGroups.find((group) => group.key === "engine");
+  if (chapterKey === "boot") return videoCaptureGroups.find((group) => group.key === "boot");
+  if (["dashboard", "seats", "driver_pov"].includes(chapterKey)) return videoCaptureGroups.find((group) => group.key === "interior");
+  return videoCaptureGroups.find((group) => group.key === "exterior");
+}
+
 function openCapture(type) {
   state.activeCaptureType = type;
   state.captureTab = "camera";
+  state.pendingAlbumIndexes = [];
   if (type === "photo" && !state.activeSlotKey) state.activeSlotKey = "left_front_45";
-  if (type === "video" && !state.activeChapterKey) state.activeChapterKey = "walkaround";
+  if (type === "video") {
+    if (!state.activeChapterKey) state.activeChapterKey = "walkaround";
+    state.activeVideoGroupKey = captureGroupForChapter(state.activeChapterKey).key;
+    state.activeChapterKey = captureGroupForChapter(state.activeChapterKey).chapterKey;
+  }
   els.captureOverlay.classList.add("is-open");
   els.captureOverlay.setAttribute("aria-hidden", "false");
   document.documentElement.style.overflow = "hidden";
@@ -342,15 +387,15 @@ function updateCaptureUi() {
   if (!els.captureOverlay) return;
   const isVideo = state.activeCaptureType === "video";
   const active = isVideo
-    ? videoChapters.find((chapter) => chapter.key === state.activeChapterKey)
+    ? videoCaptureGroups.find((group) => group.key === state.activeVideoGroupKey) || videoCaptureGroups[0]
     : photoSlots.find((slot) => slot.key === state.activeSlotKey);
 
   document.querySelector(".capture-screen")?.classList.toggle("video-mode", isVideo);
   document.querySelector(".capture-screen")?.classList.toggle("album-mode", state.captureTab === "album");
   els.captureTitle.textContent = isVideo ? "차량 영상" : "사진 촬영";
-  els.targetPill.textContent = isVideo ? `촬영 ${active?.group58 || active?.label}` : `촬영 ${active?.name}`;
+  els.targetPill.textContent = isVideo ? `촬영 ${active?.label}` : `촬영 ${active?.name}`;
   els.cameraInstruction.textContent = isVideo
-    ? `${active?.label} 챕터를 ${active?.seconds || ""} 기준으로 천천히 촬영하세요.`
+    ? active?.instruction || "촬영 옵션이 맞는지 확인하세요."
     : active?.guide || "";
   els.captureCounter.textContent = isVideo ? `${state.videos.length}/8` : `${state.photos.length}/30`;
   els.captureButton.setAttribute("aria-label", isVideo ? "영상 촬영 또는 선택" : "사진 촬영 또는 선택");
@@ -361,25 +406,34 @@ function updateCaptureUi() {
 }
 
 function renderCaptureCarousel() {
-  const list = state.activeCaptureType === "video" ? videoChapters : photoSlots;
+  const isVideo = state.activeCaptureType === "video";
+  const list = isVideo ? videoCaptureGroups : photoSlots;
   els.captureCarousel.innerHTML = list
     .map((item) => {
       const key = item.key;
       const done =
-        state.activeCaptureType === "video"
-          ? state.videos.some((media) => media.chapterKey === key)
+        isVideo
+          ? state.videos.some((media) => media.chapterKey === item.chapterKey)
           : state.photos.some((media) => media.slotKey === key);
-      const active = state.activeCaptureType === "video" ? state.activeChapterKey === key : state.activeSlotKey === key;
-      return `<button class="capture-card ${active ? "is-active" : ""} ${done ? "is-complete" : ""}" type="button" data-capture-key="${key}">
-        <span class="sample-label">예시</span>${item.label || item.name}
+      const active = isVideo ? state.activeVideoGroupKey === key : state.activeSlotKey === key;
+      const style = isVideo && active ? ` style="--guide-thumb: url('${item.thumb}')"` : "";
+      return `<button class="capture-card ${isVideo ? "video-guide" : ""} ${active ? "is-active" : ""} ${done ? "is-complete" : ""}" type="button" data-capture-key="${key}"${style}>
+        <span class="sample-label">예시</span>
+        <span class="guide-arrow" aria-hidden="true"></span>
+        <span class="capture-card-label">${item.label || item.name}</span>
       </button>`;
     })
     .join("");
 
   els.captureCarousel.querySelectorAll("[data-capture-key]").forEach((button) => {
     button.addEventListener("click", () => {
-      if (state.activeCaptureType === "video") state.activeChapterKey = button.dataset.captureKey;
-      else state.activeSlotKey = button.dataset.captureKey;
+      if (state.activeCaptureType === "video") {
+        const group = videoCaptureGroups.find((item) => item.key === button.dataset.captureKey) || videoCaptureGroups[0];
+        state.activeVideoGroupKey = group.key;
+        state.activeChapterKey = group.chapterKey;
+      } else {
+        state.activeSlotKey = button.dataset.captureKey;
+      }
       updateCaptureUi();
       centerInlineScroll(els.captureCarousel, ".capture-card.is-active");
     });
@@ -399,22 +453,19 @@ function centerInlineScroll(container, selector) {
 
 function setCaptureTab(tab) {
   state.captureTab = tab;
+  state.pendingAlbumIndexes = [];
   updateCaptureUi();
   if (tab === "camera") {
     stopLiveCamera();
     return;
   }
-  showToast(state.activeCaptureType === "photo" ? "사진 앨범에서 썸네일을 선택하세요." : "차량 영상은 58닷컴처럼 1개만 선택됩니다.");
 }
 
 function renderAlbumPanel() {
   if (!els.albumPanel) return;
   const isVideo = state.activeCaptureType === "video";
-  const activeKey = isVideo ? state.activeChapterKey : state.activeSlotKey;
-  const selected = isVideo
-    ? state.videos.some((item) => item.chapterKey === activeKey)
-    : state.photos.some((item) => item.slotKey === activeKey);
-  const countText = isVideo ? `${selected ? 1 : 0}/1` : `${state.photos.length}/30`;
+  const selectedCount = state.pendingAlbumIndexes.length;
+  const countText = isVideo ? `${selectedCount}/1` : `${selectedCount}/30`;
   const banner = isVideo
     ? "차량 영상 한 개를 선택하세요"
     : "우선 업로드 각도: 좌측 전방 45도 | 차량 전면 | 우측 전방 45도 | 우측면 | 후면 | 좌측면";
@@ -425,7 +476,7 @@ function renderAlbumPanel() {
     <div class="album-grid">
       ${Array.from({ length: total })
         .map((_, index) => {
-          const isSelected = index === 0 && selected;
+          const isSelected = state.pendingAlbumIndexes.includes(index);
           const duration = isVideo ? ["33s", "33s", "33s", "81s", "8s", "1s"][index] : "";
           return `<button class="album-tile ${isVideo ? "video" : "photo"} ${isSelected ? "is-selected" : ""}" type="button" data-demo-album="${index}" data-duration="${duration}" aria-label="앨범 썸네일 ${index + 1}">
             <span class="album-select">${isSelected ? "✓" : ""}</span>
@@ -441,20 +492,38 @@ function renderAlbumPanel() {
   `;
 
   els.albumPanel.querySelectorAll("[data-demo-album]").forEach((button) => {
-    button.addEventListener("click", () => addDemoAlbumMedia(Number(button.dataset.demoAlbum || 0)));
+    button.addEventListener("click", () => selectDemoAlbumMedia(Number(button.dataset.demoAlbum || 0)));
   });
   els.albumPanel.querySelector("#pickDeviceFile")?.addEventListener("click", () => {
     if (state.activeCaptureType === "photo") els.photoAlbumInput.click();
     else els.videoAlbumInput.click();
   });
-  els.albumPanel.querySelector("#albumDone")?.addEventListener("click", closeCapture);
+  els.albumPanel.querySelector("#albumDone")?.addEventListener("click", commitAlbumSelection);
 }
 
-async function addDemoAlbumMedia(index) {
-  const isVideo = state.activeCaptureType === "video";
-  const file = isVideo ? await createDemoVideoFile(index) : await createDemoPhotoFile(index);
-  await addFile(file, state.activeCaptureType, "demo-album");
+function selectDemoAlbumMedia(index) {
+  if (state.activeCaptureType === "video") {
+    state.pendingAlbumIndexes = [index];
+  } else if (state.pendingAlbumIndexes.includes(index)) {
+    state.pendingAlbumIndexes = state.pendingAlbumIndexes.filter((item) => item !== index);
+  } else if (state.pendingAlbumIndexes.length + state.photos.length < 30) {
+    state.pendingAlbumIndexes = [...state.pendingAlbumIndexes, index];
+  }
   updateCaptureUi();
+}
+
+async function commitAlbumSelection() {
+  if (!state.pendingAlbumIndexes.length) {
+    closeCapture();
+    return;
+  }
+  for (const index of state.pendingAlbumIndexes) {
+    const isVideo = state.activeCaptureType === "video";
+    const file = isVideo ? await createDemoVideoFile(index) : await createDemoPhotoFile(index);
+    await addFile(file, state.activeCaptureType, "demo-album");
+  }
+  state.pendingAlbumIndexes = [];
+  closeCapture();
 }
 
 async function handleCapturePress() {
@@ -757,6 +826,7 @@ function serializableDraft() {
     coverMediaId: state.coverMediaId,
     activeSlotKey: state.activeSlotKey,
     activeChapterKey: state.activeChapterKey,
+    activeVideoGroupKey: state.activeVideoGroupKey,
     activeViewerChapter: state.activeViewerChapter,
     photos: state.photos.map(stripPreview),
     videos: state.videos.map(stripPreview),
@@ -782,6 +852,7 @@ async function restoreDraft() {
     state.coverMediaId = draft.coverMediaId || "";
     state.activeSlotKey = draft.activeSlotKey || "left_front_45";
     state.activeChapterKey = draft.activeChapterKey || "walkaround";
+    state.activeVideoGroupKey = draft.activeVideoGroupKey || captureGroupForChapter(state.activeChapterKey).key;
     state.activeViewerChapter = draft.activeViewerChapter || "walkaround";
     state.photos = await restoreItems(draft.photos || []);
     state.videos = await restoreItems(draft.videos || []);
@@ -873,5 +944,6 @@ window.bobaedreamDemo = {
   closeCapture,
   renderAll,
   videoChapters,
+  videoCaptureGroups,
   photoSlots,
 };

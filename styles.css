@@ -1054,6 +1054,11 @@ button {
   scrollbar-width: none;
 }
 
+.capture-screen.video-mode .section-carousel {
+  grid-auto-columns: 82px;
+  align-items: end;
+}
+
 .capture-card {
   position: relative;
   display: grid;
@@ -1075,6 +1080,79 @@ button {
 
 .capture-card.is-active {
   border-color: #fff;
+}
+
+.capture-card .guide-arrow {
+  display: none;
+}
+
+.capture-card-label {
+  position: relative;
+  z-index: 1;
+}
+
+.capture-card.video-guide {
+  min-height: 48px;
+  background: #7a7d81;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.capture-card.video-guide .sample-label,
+.capture-card.video-guide .guide-arrow {
+  display: none;
+}
+
+.capture-card.video-guide.is-active {
+  min-height: 70px;
+  align-content: end;
+  padding: 7px 5px 6px;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, 0.76) 100%),
+    var(--guide-thumb) center / cover no-repeat,
+    #4e5661;
+  color: #fff;
+}
+
+.capture-card.video-guide.is-active .sample-label {
+  top: 6px;
+  left: 6px;
+  display: block;
+  padding: 3px 5px;
+  border-radius: 3px;
+  font-size: 10px;
+}
+
+.capture-card.video-guide.is-active .guide-arrow {
+  position: absolute;
+  right: 14px;
+  bottom: 22px;
+  left: 14px;
+  display: block;
+  height: 6px;
+  background: #f6aa25;
+  border-radius: 999px;
+  transform: skewX(-16deg);
+}
+
+.capture-card.video-guide.is-active .guide-arrow::before,
+.capture-card.video-guide.is-active .guide-arrow::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  border-top: 8px solid #f6aa25;
+  border-right: 8px solid #f6aa25;
+}
+
+.capture-card.video-guide.is-active .guide-arrow::before {
+  left: -2px;
+  transform: translateY(-50%) rotate(-135deg);
+}
+
+.capture-card.video-guide.is-active .guide-arrow::after {
+  right: -2px;
+  transform: translateY(-50%) rotate(45deg);
 }
 
 .capture-card.is-complete::after {
