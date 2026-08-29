@@ -110,6 +110,7 @@ function bindElements() {
     "missingSummary",
     "photoCount",
     "videoCount",
+    "photoManagement",
     "requiredPhotoCounter",
     "videoChapterCounter",
     "photoSlots",
@@ -212,24 +213,23 @@ function renderMode() {
 }
 
 function renderPhotoSlots() {
-  els.photoSlots.innerHTML = photoSlots
-    .map((slot) => {
-      const media = state.photos.find((item) => item.slotKey === slot.key);
-      const isCover = Boolean(media && media.id === state.coverMediaId);
-      const preview = media
-        ? `<img src="${media.previewUrl}" alt="${slot.name} 촬영 이미지" />`
-        : `<span class="sample-label">예시</span><img src="./assets/camera.svg" alt="" />`;
+  if (els.photoManagement) els.photoManagement.hidden = state.photos.length === 0;
+  els.photoSlots.innerHTML = state.photos
+    .map((media) => {
+      const slot = photoSlots.find((item) => item.key === media.slotKey) || photoSlots[0];
+      const isCover = media.id === state.coverMediaId;
+      const preview = `<img src="${media.previewUrl}" alt="${slot.name} 촬영 이미지" />`;
       return `
         <article class="slot-card ${media ? "is-complete" : ""}" data-slot="${slot.key}">
           <span class="status-dot" aria-hidden="true"></span>
           <div class="slot-preview">${preview}</div>
           <div class="slot-body">
-            <strong>${slot.name}${slot.required ? " · 필수" : ""}</strong>
+            <strong>${slot.name}</strong>
             <p>${slot.guide}</p>
             <div class="slot-actions">
-              <button class="mini-button" type="button" data-retake-photo="${slot.key}">${media ? "재촬영" : "촬영"}</button>
-              ${media ? `<button class="cover-button ${isCover ? "is-cover" : ""}" type="button" data-cover="${media.id}">${isCover ? "대표" : "대표 지정"}</button>` : ""}
-              ${media ? `<button class="delete-button" type="button" data-delete="${media.id}">삭제</button>` : ""}
+              <button class="mini-button" type="button" data-retake-photo="${slot.key}">교체</button>
+              <button class="cover-button ${isCover ? "is-cover" : ""}" type="button" data-cover="${media.id}">${isCover ? "대표" : "대표 지정"}</button>
+              <button class="delete-button" type="button" data-delete="${media.id}">삭제</button>
             </div>
           </div>
         </article>`;
@@ -343,7 +343,7 @@ function renderProgress() {
   els.progressFill.style.width = `${rate}%`;
   els.photoCount.textContent = String(state.photos.length);
   els.videoCount.textContent = String(state.videos.length);
-  els.requiredPhotoCounter.textContent = `${doneRequiredPhotos.length}/${requiredPhotos.length} 완료`;
+  els.requiredPhotoCounter.textContent = `${state.photos.length}/30`;
   els.videoChapterCounter.textContent = `${doneVideos.length}/${videoChapters.length} 완료`;
   const missingPhotos = requiredPhotos.length - doneRequiredPhotos.length;
   const missingVideos = videoChapters.length - doneVideos.length;
