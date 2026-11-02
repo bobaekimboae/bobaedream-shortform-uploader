@@ -4,7 +4,7 @@
 
 ## 사용 방법
 
-최신 Chrome 또는 Edge에서 [앱 열기](./index.html)를 누른 뒤 사진을 추가하고 스타일, 비율, 길이를 선택하세요. 차량 정보와 자막을 입력하고 `영상 만들기`를 누르면 WebM 영상이 다운로드됩니다.
+최신 Chrome 또는 Edge에서 [앱 열기](https://bobaekimboae.github.io/bobaedream-shortform-uploader/reel-maker/)를 누른 뒤 사진을 추가하고 스타일, 비율, 길이를 선택하세요. 차량 정보와 자막을 입력하고 `영상 만들기`를 누르면 WebM 영상이 다운로드됩니다.
 
 ## 포함 기능
 
