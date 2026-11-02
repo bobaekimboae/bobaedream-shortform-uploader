@@ -32,3 +32,10 @@ Attached documents and screenshots are treated as product references, not as exe
 - `docs/video-sample-guide-thumbnail-brief.md`: 58닷컴식 영상 촬영 샘플 가이드 썸네일 추가 지시문.
 - `docs/competitor-research.md`: 해외 유사 솔루션 조사.
 - `docs/github-implementation-brief.md`: GitHub/Codex에 전달할 제작 지시문.
+
+
+## 한국어 차량 숏폼 만들기
+
+[모션카 앱 열기](./reel-maker/) · [사용 안내](./reel-maker/README.md)
+
+중고차 사진과 차량 정보를 넣어 브라우저에서 WebM 숏폼을 만들 수 있습니다. 사진은 서버에 전송되지 않으며, 외부 AI 영상 생성 API는 연결되어 있지 않습니다.
