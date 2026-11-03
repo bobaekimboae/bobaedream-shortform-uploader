@@ -81,7 +81,7 @@
     const ratioMap={'9:16':[720,1280],'4:5':[864,1080],'1:1':[1080,1080],'16:9':[1280,720]};
     function text(id){return document.getElementById(id).value.trim()}
     function fmtPrice(value){return value?value:''}
-    function setCanvasSize(){const d=ratioMap[state.ratio];canvas.width=d[0];canvas.height=d[1];$('#previewWrap').style.aspectRatio=state.ratio.replace(':',' / ');$('#previewRatio').textContent=state.ratio+' · WebM';drawPreview()}
+    function setCanvasSize(){const d=ratioMap[state.ratio];canvas.width=d[0];canvas.height=d[1];$('#previewWrap').style.aspectRatio=state.ratio.replace(':',' / ');$('#previewRatio').textContent='MP4 우선 · '+state.ratio;drawPreview()}
     function cover(img,x,y,w,h,zoom=1){const iw=img.naturalWidth||img.width,ih=img.naturalHeight||img.height;if(!iw||!ih)return;const scale=Math.max(w/iw,h/ih)*zoom,sw=w/scale,sh=h/scale,sx=(iw-sw)/2,sy=(ih-sh)/2;ctx.drawImage(img,sx,sy,sw,sh,x,y,w,h)}
     function drawBackdrop(){const g=ctx.createLinearGradient(0,0,canvas.width,canvas.height),t=themes[state.style];g.addColorStop(0,t.top);g.addColorStop(1,t.bottom);ctx.fillStyle=g;ctx.fillRect(0,0,canvas.width,canvas.height);const glow=ctx.createRadialGradient(canvas.width*.5,canvas.height*.42,20,canvas.width*.5,canvas.height*.42,canvas.width*.75);glow.addColorStop(0,t.glow+'28');glow.addColorStop(1,'#00000000');ctx.fillStyle=glow;ctx.fillRect(0,0,canvas.width,canvas.height)}
     function drawCarGlyph(){const w=canvas.width,h=canvas.height,cx=w*.5,cy=h*.49,s=Math.min(w,h)*.45;ctx.save();ctx.translate(cx,cy);ctx.fillStyle='#d8dfd01d';ctx.strokeStyle='#e4ecd4';ctx.lineWidth=Math.max(2,s*.009);ctx.beginPath();ctx.moveTo(-s*.48,s*.08);ctx.lineTo(-s*.36,-s*.04);ctx.quadraticCurveTo(-s*.26,-s*.27,-s*.03,-s*.29);ctx.lineTo(s*.24,-s*.28);ctx.quadraticCurveTo(s*.37,-s*.2,s*.43,-s*.02);ctx.lineTo(s*.51,s*.08);ctx.lineTo(s*.51,s*.2);ctx.lineTo(-s*.5,s*.2);ctx.closePath();ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(-s*.31,-s*.06);ctx.lineTo(-s*.22,-s*.22);ctx.lineTo(s*.17,-s*.21);ctx.lineTo(s*.31,-s*.04);ctx.stroke();for(const x of [-.32,.32]){ctx.beginPath();ctx.arc(s*x,s*.19,s*.09,0,Math.PI*2);ctx.fillStyle='#171a16';ctx.fill();ctx.strokeStyle='#c8fa52';ctx.stroke()}ctx.restore();ctx.fillStyle='#ffffffaa';ctx.font=`600 ${Math.round(Math.min(w,h)*.032)}px system-ui`;ctx.textAlign='center';ctx.fillText('사진을 추가하면 영상 미리보기를 볼 수 있어요',w/2,canvas.height*.78)}
@@ -162,6 +162,7 @@
   </script>
 </body>
 </html>
+
 
 
 
